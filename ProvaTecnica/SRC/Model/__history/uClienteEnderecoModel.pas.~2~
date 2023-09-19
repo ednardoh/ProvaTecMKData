@@ -1,0 +1,52 @@
+unit uClienteEnderecoModel;
+
+interface
+
+uses
+  uEnumerado, FireDAC.Comp.Client;
+
+type
+  TClienteEnderecoModel = class
+    private
+      FAcao: TAcao;
+      FID: integer;
+      FIDCODCLIENTE: integer;
+      FENDERECO: string;
+      FNUMERO: string;
+      FCEP: string;
+      FBAIRRO: string;
+      FCIDADE: string;
+      FESTADO: string;
+      FPAIS: string;
+
+      procedure SetAcao(const Value: TAcao);
+      procedure SetID(const Value: integer);
+      procedure SetIDCODCLIENTE(const Value: integer);
+      procedure SetENDERECO(const Value: string);
+      procedure SetNUMERO(const Value: string);
+      procedure SetCEP(const Value: string);
+      procedure SetBAIRRO(const Value: string);
+      procedure SetCIDADE(const Value: string);
+      procedure SetESTADO(const Value: string);
+      procedure SetPAIS(const Value: string);
+    public
+      function Obter(AorderBy: Integer;AValorparcial: string): TFDQuery;
+      function Salvar: Boolean;
+      function GetId: Integer;
+      function ObterEnderecoCLI(AValorpesquisa: string): TFDQuery;
+
+      property Acao: TAcao read FAcao write SetAcao;
+      property ID: integer read FID write SetID;
+      property IDCODCLIENTE: integer read FIDCODCLIENTE write SetIDCODCLIENTE;
+      property ENDERECO: string read FENDERECO write SetENDERECO;
+      property NUMERO: string read FNUMERO write SetNUMERO;
+      property CEP: string read FCEP write SetCEP;
+      property BAIRRO: string read FBAIRRO write SetBAIRRO;
+      property CIDADE: string read FCIDADE write SetCIDADE;
+      property ESTADO: string read FESTADO write SetESTADO;
+      property PAIS: string read FPAIS write SetPAIS;
+  end;
+
+implementation
+
+end.

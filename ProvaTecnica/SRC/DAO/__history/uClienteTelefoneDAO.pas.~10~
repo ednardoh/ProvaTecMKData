@@ -1,0 +1,165 @@
+unit uClienteTelefoneDAO;
+
+interface
+
+uses
+  FireDAC.Comp.Client, uConexaoDAO, uClienteTelefoneModel, System.SysUtils, uSistemaControl;
+
+type
+  TClienteTelefoneDAO = class
+    private
+      FConexao: TConexao;
+    public
+      constructor Create;
+
+      function Incluir(AClienteModel: TClienteTelefoneModel): Boolean;
+      function Alterar(AClienteModel: TClienteTelefoneModel): Boolean;
+      function Excluir(AClienteModel: TClienteTelefoneModel): Boolean;
+      function GetId: Integer;
+      function Obter(AorderBy: Integer;AValorparcial: string): TFDQuery;
+      function ObterCLIByTelefone(AValorpesquisa: string): TFDQuery;
+  end;
+
+implementation
+
+{ TClienteTelefoneDAO }
+
+constructor TClienteTelefoneDAO.Create;
+begin
+  FConexao := TSistemaControl.GetInstance().Conexao;
+end;
+
+function TClienteTelefoneDAO.GetId: Integer;
+var
+  VQry: TFDQuery;
+begin
+  VQry := FConexao.CriarQuery();
+  try
+    VQry.Open('SELECT coalesce(MAX(ID),0)+1 AS CODIGO FROM CLIENTE_TELEFONE');
+    try
+      Result := VQry.Fields[0].AsInteger;
+    finally
+      VQry.Close;
+    end;
+  finally
+    VQry.Free;
+  end;
+end;
+
+function TClienteTelefoneDAO.Incluir(
+  AClienteModel: TClienteTelefoneModel): Boolean;
+var
+  VQry: TFDQuery;
+begin
+  VQry := FConexao.CriarQuery();
+  try
+    try
+      VQry.Connection.StartTransaction;  //Inicia uma trasação
+      VQry.ExecSQL('INSERT INTO CLIENTE_TELEFONE (ID,               '+
+                   '                              ID_CODCLIENTE,    '+
+                   '                              TELEFONE_CLIENTE  '+
+                   '                              ) values (        '+
+                   '                              :ID,              '+
+                   '                              :ID_CODCLIENTE,   '+
+                   '                              :TELEFONE_CLIENTE ',
+                   [AClienteModel.ID,
+                    AClienteModel.IDCodCliente,
+                    AClienteModel.TelefoneCliente]);
+
+      VQry.Connection.Commit;
+      Result := True;
+      except
+      on E: Exception do
+        begin
+          VQry.Connection.Rollback;  //desfaz a transação caso ocorra erro.
+        end;
+    end;
+  finally
+    VQry.Free;
+  end;
+end;
+
+function TClienteTelefoneDAO.Excluir(
+  AClienteModel: TClienteTelefoneModel): Boolean;
+var
+  VQry: TFDQuery;
+begin
+  VQry := FConexao.CriarQuery();
+  try
+    try
+      VQry.Connection.StartTransaction;
+      VQry.ExecSQL('DELETE FROM CLIENTE_TELEFONE WHERE ID =:ID ', [AClienteModel.ID]);
+
+      VQry.Connection.Commit;
+      Result := True;
+      except
+      on E: Exception do
+        begin
+          VQry.Connection.Rollback;  //desfaz a transação
+        end;
+    end;
+  finally
+    VQry.Free;
+  end;
+end;
+
+function TClienteTelefoneDAO.Alterar(
+  AClienteModel: TClienteTelefoneModel): Boolean;
+var
+  VQry: TFDQuery;
+  strSQL: string;
+begin
+  VQry := FConexao.CriarQuery();
+  try
+    try
+      strSQL :='';
+      VQry.Connection.StartTransaction;
+      VQry.Close;
+      VQry.SQL.Clear;
+
+      strSQL := ' UPDATE CLIENTE_TELEFONE SET TELEFONE_CLIENTE=:TELEFONE_CLIENTE, '+
+                ' where ID=:ID AND ID_CODCLIENTE=:ID_CODCLIENTE                   ';
+
+      VQry.SQL.Add(strSQL);
+      VQry.ParamByName('TELEFONE_CLIENTE').AsString := AClienteModel.TelefoneCliente;
+      VQry.ParamByName('ID').AsString               := AClienteModel.ID;
+      VQry.ParamByName('ID_CODCLIENTE').AsString    := AClienteModel.IDCodCliente;
+
+      VQry.ExecSQL();
+      VQry.Connection.Commit;
+      except
+      on E: Exception do
+        begin
+          VQry.Connection.Rollback;  //desfaz a transação
+        end;
+      end;
+      Result := True;
+  finally
+    VQry.Free;
+  end;
+end;
+
+//AQUI EU POSSO ORDENAR PELO INDICE DOS CAMPOS E FILTRAR PELO VALOR PARCIAL,
+//É NECESSÁRIO COLOCAR AS PORCENTAGEM %% NO EDIT NA TELA DE CONSULTA
+function TClienteTelefoneDAO.Obter(AorderBy: Integer;
+  AValorparcial: string): TFDQuery;
+var
+  VQry: TFDQuery;
+begin
+  VQry := FConexao.CriarQuery();
+
+  if AValorparcial = '' then
+    VQry.Open('select ID, ID_CODCLIENTE, TELEFONE_CLIENTE order by '+AorderBy.ToString)
+  else
+     VQry.Open('select ID, ID_CODCLIENTE, TELEFONE_CLIENTE where TELEFONE_CLIENTE like ' + quotedstr(AValorparcial) + ' order by '+AorderBy.ToString);
+
+  Result := VQry;
+end;
+
+function TClienteTelefoneDAO.ObterCLIByTelefone(
+  AValorpesquisa: string): TFDQuery;
+begin
+
+end;
+
+end.

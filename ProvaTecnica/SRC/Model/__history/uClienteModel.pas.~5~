@@ -1,0 +1,154 @@
+unit uClienteModel;
+
+interface
+
+uses
+  uEnumerado, FireDAC.Comp.Client;
+
+type
+  TClienteModel = class
+  private
+    FAcao: TAcao;
+    FCodigo: Integer;
+    FNome: string;
+    FTipo: string;
+    FCPFCNPJ: string;
+    FRG: string;
+    FDataCadastro: string;
+    FFLG_ATIVO: integer;
+
+    procedure SetAcao(const Value: TAcao);
+    procedure SetCodigo(const Value: Integer);
+    procedure SetNome(const Value: string);
+    procedure SetTipo(const Value: string);
+    procedure SetCPFCNPJ(const Value: string);
+    procedure SetRG(const Value: string);
+    procedure SetDataCadastro(const Value: string);
+    procedure SetFLG_ATIVO(const Value: Integer);
+  public
+    function Obter(AorderBy: Integer;AValorparcial: string): TFDQuery;
+    function Salvar: Boolean;
+    function GetId: Integer;
+    function ObterNomeCLI(AValorpesquisa: string): TFDQuery;
+
+    property Codigo: Integer read FCodigo write SetCodigo;
+    property Nome: string read FNome write SetNome;
+    property Tipo: string read FTipo write SetTipo;
+    property CPFCNPJ: string read FCPFCNPJ write SetCPFCNPJ;
+    property RG: string read FRG write SetRG;
+    property DataCadastro: string read  FDataCadastro write SetDataCadastro;
+    property FLG_ATIVO: integer read FFLG_ATIVO write SetFLG_ATIVO;
+    property Acao: TAcao read FAcao write SetAcao;
+  end;
+
+implementation
+
+{ TClienteModel }
+
+Uses uClienteDAO;
+
+function TClienteModel.GetId: Integer;
+var
+  VClienteDao: TClienteDao;
+begin
+  VClienteDao := TClienteDao.Create;
+  try
+    Result := VClienteDao.GetId;
+  finally
+    VClienteDao.Free;
+  end;
+end;
+
+function TClienteModel.Obter(AorderBy: Integer;AValorparcial: string): TFDQuery;
+var
+  VClienteDao: TClienteDao;
+begin
+  VClienteDao := TClienteDao.Create;
+  try
+    Result := VClienteDao.Obter(AorderBy,AValorparcial);
+  finally
+    VClienteDao.Free;
+  end;
+end;
+
+function TClienteModel.ObterNomeCLI(AValorpesquisa: string): TFDQuery;
+var
+  VClienteDao: TClienteDao;
+begin
+  VClienteDao := TClienteDao.Create;
+  try
+    Result := VClienteDao.ObterCLIByID(AValorpesquisa);
+  finally
+    VClienteDao.Free;
+  end;
+end;
+
+function TClienteModel.Salvar: Boolean;
+var
+  VClienteDao: TClienteDao;
+begin
+  Result := False;
+
+  VClienteDao := TClienteDao.Create;
+  try
+    case FAcao of
+      uEnumerado.tacIncluir: Result := VClienteDao.Incluir(Self);
+      uEnumerado.tacAlterar: Result := VClienteDao.Alterar(Self);
+      uEnumerado.tacExcluir: Result := VClienteDao.Excluir(Self);
+    end;
+  finally
+    VClienteDao.Free;
+  end;
+end;
+
+procedure TClienteModel.SetAcao(const Value: TAcao);
+begin
+  FAcao := Value;
+end;
+
+procedure TClienteModel.SetBairro(const Value: string);
+begin
+  FBairro := Value;
+end;
+
+procedure TClienteModel.SetCep(const Value: string);
+begin
+  FCep := Value;
+end;
+
+procedure TClienteModel.SetCidade(const Value: string);
+begin
+  FCidade := Value;
+end;
+
+procedure TClienteModel.SetCodigo(const Value: Integer);
+begin
+  FCodigo := Value;
+end;
+
+procedure TClienteModel.SetEndereco(const Value: string);
+begin
+  FEndereco := Value;
+end;
+
+procedure TClienteModel.SetNome(const Value: string);
+begin
+  FNome := Value;
+end;
+
+procedure TClienteModel.SetNumero(const Value: string);
+begin
+  FNumero := Value;
+end;
+
+procedure TClienteModel.SetUF(const Value: string);
+begin
+  FUF := Value;
+end;
+
+procedure TClienteModel.SetFLG_ATIVO(const Value: Integer);
+begin
+  FFLG_ATIVO := Value;
+end;
+
+end.

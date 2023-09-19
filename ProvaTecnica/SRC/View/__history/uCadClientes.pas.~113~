@@ -1,0 +1,618 @@
+unit uCadClientes;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Data.DB, Datasnap.DBClient,
+  Vcl.Grids, Vcl.DBGrids, Vcl.StdCtrls, Vcl.Mask, Vcl.DBCtrls, VCLTee.TeCanvas,
+  VCLTee.TeeEdiGrad, System.ImageList, Vcl.ImgList, uClienteControl, uClienteTelefoneControl,
+  Datasnap.Provider, uEnumerado, Vcl.ComCtrls, Vcl.Buttons, IPPeerClient,
+  REST.Response.Adapter, REST.Client, Data.Bind.Components,
+  REST.Types, System.Types, Data.Bind.ObjectScope, System.JSON, uClienteEnderecoControl;
+
+type
+  TfrmCad_Clientes = class(TForm)
+    pn_Clientes: TPanel;
+    Panel1: TPanel;
+    ds_CadClientes: TDataSource;
+    TB_Clientes: TClientDataSet;
+    TB_ClientesCODIGO: TIntegerField;
+    TB_ClientesNOME: TStringField;
+    pn_Grid: TPanel;
+    DBG_Clientes: TDBGrid;
+    pn_Controls: TPanel;
+    Label1: TLabel;
+    DBEdtCodigo: TDBEdit;
+    Label2: TLabel;
+    DBEdtNomeCli: TDBEdit;
+    Label4: TLabel;
+    DBEdtEndereco: TDBEdit;
+    Shape1: TShape;
+    Shape2: TShape;
+    Label9: TLabel;
+    EdtPesquisa: TEdit;
+    DBButtons: TDBNavigator;
+    btnConsultar: TButtonGradient;
+    ImageListIco: TImageList;
+    DSP_Clientes: TDataSetProvider;
+    TB_ClientesFLG_ATIVO: TIntegerField;
+    TB_ClientesTIPO: TStringField;
+    TB_ClientesCPFCNPJ: TStringField;
+    TB_ClientesRG: TStringField;
+    TB_ClientesDATACADASTRO: TDateField;
+    Label3: TLabel;
+    DBEditRG: TDBEdit;
+    Label5: TLabel;
+    DTP_DataCadstro: TDateTimePicker;
+    ds_TelefoneCLI: TDataSource;
+    TB_TelefoneCLI: TClientDataSet;
+    Label6: TLabel;
+    TB_TelefoneCLIID: TIntegerField;
+    TB_TelefoneCLIID_CODCLIENTE: TIntegerField;
+    TB_TelefoneCLITELEFONE_CLIENTE: TStringField;
+    dbg_TelefoneCLI: TDBGrid;
+    DBRadioGroup1: TDBRadioGroup;
+    DBG_TipoPessoa: TDBRadioGroup;
+    GroupBox1: TGroupBox;
+    MSK_Cep: TMaskEdit;
+    btn_BuscaCEP: TSpeedButton;
+    DBG_Logradouro: TDBGrid;
+    ds_EnderecoCLI: TDataSource;
+    TB_EnderecoCLI: TClientDataSet;
+    TB_EnderecoCLIID: TIntegerField;
+    TB_EnderecoCLIID_CODCLIENTE: TIntegerField;
+    TB_EnderecoCLIENDERECO: TStringField;
+    TB_EnderecoCLINUMERO: TStringField;
+    TB_EnderecoCLICEP: TStringField;
+    TB_EnderecoCLIBAIRRO: TStringField;
+    TB_EnderecoCLICIDADE: TStringField;
+    TB_EnderecoCLIESTADO: TStringField;
+    TB_EnderecoCLIPAIS: TStringField;
+    RESTClient1: TRESTClient;
+    RESTRequest1: TRESTRequest;
+    RESTResponse1: TRESTResponse;
+    RESTResponseDataSetAdapter: TRESTResponseDataSetAdapter;
+    Tb_Consulta: TClientDataSet;
+    DSP_Consulta: TDataSetProvider;
+    DBNavigator1: TDBNavigator;
+    DBNavigator2: TDBNavigator;
+    DSP_TelefoneCLI: TDataSetProvider;
+    DSP_EnderecoCLI: TDataSetProvider;
+    CKB_SoAtivos: TCheckBox;
+    procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure PintaEdit(Sender: TObject);
+    procedure PreencheDataSetClienteSoAtivos;
+    procedure PreencheDataSetCliente;
+    procedure PreencheDataSetClienteTelefone(AIDCLIENTE: integer);
+    procedure PreencheDataSetClienteEndereco(AIDCLIENTE: integer);
+    procedure btnConsultarClick(Sender: TObject);
+    procedure TB_ClientesBeforeEdit(DataSet: TDataSet);
+    procedure TB_ClientesBeforeInsert(DataSet: TDataSet);
+    procedure TB_ClientesBeforePost(DataSet: TDataSet);
+    procedure TB_ClientesBeforeDelete(DataSet: TDataSet);
+    procedure btn_BuscaCEPClick(Sender: TObject);
+    procedure TB_ClientesAfterInsert(DataSet: TDataSet);
+    procedure TB_ClientesAfterEdit(DataSet: TDataSet);
+    procedure TB_TelefoneCLIBeforePost(DataSet: TDataSet);
+    procedure TB_TelefoneCLIAfterInsert(DataSet: TDataSet);
+    procedure TB_TelefoneCLIAfterEdit(DataSet: TDataSet);
+    procedure TB_TelefoneCLIBeforeDelete(DataSet: TDataSet);
+    procedure DBG_ClientesCellClick(Column: TColumn);
+    procedure DBG_ClientesDrawDataCell(Sender: TObject; const Rect: TRect;
+      Field: TField; State: TGridDrawState);
+    procedure ds_CadClientesStateChange(Sender: TObject);
+    procedure DBG_ClientesDrawColumnCell(Sender: TObject; const Rect: TRect;
+      DataCol: Integer; Column: TColumn; State: TGridDrawState);
+    procedure DBG_ClientesKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure TB_EnderecoCLIAfterEdit(DataSet: TDataSet);
+    procedure TB_EnderecoCLIAfterInsert(DataSet: TDataSet);
+    procedure TB_EnderecoCLIBeforePost(DataSet: TDataSet);
+    procedure TB_EnderecoCLIBeforeDelete(DataSet: TDataSet);
+    procedure CKB_SoAtivosClick(Sender: TObject);
+  private
+    { Private declarations }
+    Cliente: TClienteControl;
+    ClienteTelefone: TClienteTelefoneControl;
+    ClienteEndereco: TClienteEnderecoControl;
+    ATipo: TAcao;
+    Objeto,
+    Objt: TJsonObject;
+    ParRows,
+    PRows: TJsonPair;
+    strApiDataSet: string;
+    procedure BuscaCep(strURL, strAText: string); //busca Cep
+    function ConsultaClientePorCPFCNPJ(strValor: string): Boolean;
+  public
+    { Public declarations }
+  end;
+
+var
+  frmCad_Clientes: TfrmCad_Clientes;
+
+implementation
+
+{$R *.dfm}
+
+uses UPrincipal;
+
+procedure TfrmCad_Clientes.btnConsultarClick(Sender: TObject);
+begin
+  //Aqui ele consulta o que tá em cache, sem precisar ir no banco
+  if StrToIntDef(EdtPesquisa.Text, 0) = 0 then  //tem letras
+  begin
+    TB_Clientes.IndexFieldNames :='NOME';
+    TB_Clientes.Locate('NOME',EdtPesquisa.Text,[loPartialKey, loCaseInsensitive]);
+  end
+  else
+  begin
+    TB_Clientes.IndexFieldNames :='CODIGO';
+    TB_Clientes.Locate('CODIGO',EdtPesquisa.Text,[]);
+  end;
+end;
+
+procedure TfrmCad_Clientes.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action := cafree;
+end;
+
+procedure TfrmCad_Clientes.FormCreate(Sender: TObject);
+var nI: Integer;
+begin
+  For nI := 0 to ComponentCount-1 do
+  begin
+    if Components[nI] is TEdit  then
+      (Components[nI] as TEdit).OnEnter := PintaEdit
+    else
+      if Components[nI] is TDBEdit then
+        (Components[nI] as TDBEdit).OnEnter := PintaEdit;
+  end;
+  PreencheDataSetCliente;
+end;
+
+procedure TfrmCad_Clientes.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+   perform(WM_NEXTDLGCTL,0,0);
+end;
+
+procedure TfrmCad_Clientes.PintaEdit(Sender: TObject);
+var nI: Integer;
+begin
+  For nI := 0 to ComponentCount-1 do
+  begin
+    if (Components[nI] is TEdit) then
+    begin
+    if TEdit(Components[nI]).Focused then
+      TEdit(Components[nI]).Color := $00D7FFFF
+    else
+      TEdit(Components[nI]).Color := clWhite;
+    end
+    else
+      if (Components[nI] is TDBEdit) then
+      begin
+        if TDBEdit(Components[nI]).Focused then
+          TDBEdit(Components[nI]).Color := $00D7FFFF
+        else
+          TDBEdit(Components[nI]).Color := clWhite;
+      end;
+
+  end;
+end;
+
+procedure TfrmCad_Clientes.PreencheDataSetCliente;
+begin
+  try
+    Cliente:= TClienteControl.Create;
+    DSP_Clientes.DataSet := Cliente.Obter(1,'');
+    TB_Clientes.Open;
+    PreencheDataSetClienteTelefone(TB_ClientesCODIGO.AsInteger);
+    PreencheDataSetClienteEndereco(TB_ClientesCODIGO.AsInteger);
+  finally
+    Cliente.Free;
+  end;
+end;
+
+procedure TfrmCad_Clientes.PreencheDataSetClienteEndereco(AIDCLIENTE: integer);
+begin
+  try
+    TB_EnderecoCLI.close;
+    ClienteEndereco:= TClienteEnderecoControl.Create;
+    DSP_EnderecoCLI.DataSet := ClienteEndereco.ObterEnderecoCLI(AIDCLIENTE.ToString());
+    TB_EnderecoCLI.Open;
+  finally
+    ClienteEndereco.Free;
+  end;
+end;
+
+procedure TfrmCad_Clientes.PreencheDataSetClienteSoAtivos;
+begin
+  try
+    TB_Clientes.close;
+    TB_TelefoneCLI.Close;
+    TB_EnderecoCLI.Close;
+    Cliente:= TClienteControl.Create;
+    DSP_Clientes.DataSet := Cliente.ObterSoAtivos;
+    TB_Clientes.Open;
+    PreencheDataSetClienteTelefone(TB_ClientesCODIGO.AsInteger);
+    PreencheDataSetClienteEndereco(TB_ClientesCODIGO.AsInteger);
+  finally
+    Cliente.Free;
+  end;
+end;
+
+procedure TfrmCad_Clientes.PreencheDataSetClienteTelefone(AIDCLIENTE: integer);
+begin
+  try
+    TB_TelefoneCLI.close;
+    ClienteTelefone:= TClienteTelefoneControl.Create;
+    DSP_TelefoneCLI.DataSet := ClienteTelefone.ObterTelefone(AIDCLIENTE.ToString());
+    TB_TelefoneCLI.Open;
+  finally
+    ClienteTelefone.Free;
+  end;
+end;
+
+procedure TfrmCad_Clientes.btn_BuscaCEPClick(Sender: TObject);
+begin
+  BuscaCep('https://api.postmon.com.br/v1/cep/',MSK_Cep.Text);
+end;
+
+procedure TfrmCad_Clientes.BuscaCep(strURL, strAText: string);
+var
+  strIBGEEstado,
+  strIBGECidade: string;
+begin
+  RESTClient1.BaseURL := strURL + strAText;
+  RESTRequest1.Method := rmGET;
+  RESTRequest1.Execute;
+
+  Objeto  := RESTResponse1.JSONValue as TJSONObject;
+
+  strIBGEEstado :='';
+  strIBGECidade :='';
+
+  TB_EnderecoCLI.Insert;
+  TB_EnderecoCLIID.Value := 0;
+  TB_EnderecoCLIID_CODCLIENTE.Value := TB_ClientesCODIGO.Value;
+  //Logradouro
+  ParRows := Objeto.Get('logradouro');
+  TB_EnderecoCLIENDERECO.AsString :=frmPrincipal.CharEspeciais(ParRows.JsonValue.ToString);
+
+  //Ibge estado
+  ParRows := Objeto.Get('estado_info');
+  Objt    := Objeto.Get('estado_info').JsonValue as TJSONObject;
+  PRows   := Objt.Get('codigo_ibge');
+  strIBGEEstado :=frmPrincipal.CharEspeciais(PRows.JsonValue.ToString);
+
+  //CEP
+  ParRows := Objeto.Get('cep');
+  TB_EnderecoCLICEP.AsString :=frmPrincipal.CharEspeciais(ParRows.JsonValue.ToString);
+
+  //Ibge Cidade
+  ParRows := Objeto.Get('cidade_info');
+  Objt    := Objeto.Get('cidade_info').JsonValue as TJSONObject;
+  PRows   := Objt.Get('codigo_ibge');
+  strIBGECidade :=frmPrincipal.CharEspeciais(PRows.JsonValue.ToString);
+
+  //Bairro
+  ParRows := Objeto.Get('bairro');
+  TB_EnderecoCLIBAIRRO.AsString :=frmPrincipal.CharEspeciais(ParRows.JsonValue.ToString);
+
+  //Cidade
+  ParRows := Objeto.Get('cidade');
+  TB_EnderecoCLICIDADE.AsString :=frmPrincipal.CharEspeciais(ParRows.JsonValue.ToString);
+
+  //estado
+  ParRows := Objeto.Get('estado');
+  TB_EnderecoCLIESTADO.AsString :=frmPrincipal.CharEspeciais(ParRows.JsonValue.ToString);
+
+  //Pais
+  TB_EnderecoCLIPAIS.AsString := 'Brasil';
+
+  TB_EnderecoCLINUMERO.FocusControl;
+end;
+
+procedure TfrmCad_Clientes.CKB_SoAtivosClick(Sender: TObject);
+begin
+  if CKB_SoAtivos.Checked then
+    PreencheDataSetClienteSoAtivos;
+end;
+
+function TfrmCad_Clientes.ConsultaClientePorCPFCNPJ(strValor: string): Boolean;
+begin
+  try
+    Cliente:= TClienteControl.Create;
+    DSP_Consulta.DataSet := Cliente.ObterPorCPFCNPJ(strValor);
+    Tb_Consulta.Open;
+  finally
+    Cliente.Free;  
+    result :=DSP_Consulta.DataSet.RecordCount > 0;
+    Tb_Consulta.Close;   
+  end;
+end;
+
+procedure TfrmCad_Clientes.DBG_ClientesCellClick(Column: TColumn);
+begin
+  PreencheDataSetClienteTelefone(TB_ClientesCODIGO.AsInteger);
+  PreencheDataSetClienteEndereco(TB_ClientesCODIGO.AsInteger);
+end;
+
+procedure TfrmCad_Clientes.DBG_ClientesDrawColumnCell(Sender: TObject;
+  const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+begin
+  PreencheDataSetClienteTelefone(TB_ClientesCODIGO.AsInteger);
+  PreencheDataSetClienteEndereco(TB_ClientesCODIGO.AsInteger);
+end;
+
+procedure TfrmCad_Clientes.DBG_ClientesDrawDataCell(Sender: TObject;
+  const Rect: TRect; Field: TField; State: TGridDrawState);
+begin
+  PreencheDataSetClienteTelefone(TB_ClientesCODIGO.AsInteger);
+  PreencheDataSetClienteEndereco(TB_ClientesCODIGO.AsInteger);
+end;
+
+procedure TfrmCad_Clientes.DBG_ClientesKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  PreencheDataSetClienteTelefone(TB_ClientesCODIGO.AsInteger);
+  PreencheDataSetClienteEndereco(TB_ClientesCODIGO.AsInteger);
+end;
+
+procedure TfrmCad_Clientes.ds_CadClientesStateChange(Sender: TObject);
+begin
+  PreencheDataSetClienteTelefone(TB_ClientesCODIGO.AsInteger);
+  PreencheDataSetClienteEndereco(TB_ClientesCODIGO.AsInteger);
+end;
+
+procedure TfrmCad_Clientes.TB_ClientesAfterEdit(DataSet: TDataSet);
+begin
+  TB_ClientesDATACADASTRO.Value := DTP_DataCadstro.Date;
+end;
+
+procedure TfrmCad_Clientes.TB_ClientesAfterInsert(DataSet: TDataSet);
+begin
+  TB_ClientesDATACADASTRO.Value := DTP_DataCadstro.Date;
+end;
+
+procedure TfrmCad_Clientes.TB_ClientesBeforeDelete(DataSet: TDataSet);
+begin
+  ATipo := uEnumerado.tacExcluir;
+  if MessageDlg('Deseja realmente exluir essa informação ?',mtConfirmation, [mbYes,mbNo],1) = mrYes then
+  begin
+    try
+      Cliente:= TClienteControl.Create;
+      Cliente.ClienteModel.Acao     := ATipo;
+      Cliente.ClienteModel.Codigo   := TB_ClientesCODIGO.AsInteger;
+      Cliente.Salvar;
+    finally
+      messagedlg('Dado Excluido com sucesso!',mtinformation,[mbok],0);
+      Cliente.Free;
+      PreencheDataSetCliente;
+    end;
+  end;
+end;
+
+procedure TfrmCad_Clientes.TB_ClientesBeforeEdit(DataSet: TDataSet);
+begin
+  TB_TelefoneCLI.Close;
+  TB_EnderecoCLI.Close;
+  TB_ClientesNOME.FocusControl;
+end;
+
+procedure TfrmCad_Clientes.TB_ClientesBeforeInsert(DataSet: TDataSet);
+begin
+  TB_TelefoneCLI.Close;
+  TB_EnderecoCLI.Close;
+  TB_ClientesNOME.FocusControl;
+end;
+
+procedure TfrmCad_Clientes.TB_ClientesBeforePost(DataSet: TDataSet);
+begin
+  if TB_Clientes.State = dsInsert then  //grava no banco as inserções ou alterações
+  begin
+    ATipo := uEnumerado.tacIncluir;
+    if ConsultaClientePorCPFCNPJ(DBEdtEndereco.Text) then
+    begin
+      Application.MessageBox('CPF/CNPJ já cadastrado na Base de Clientes', 'Erro', MB_ICONERROR + mb_ok);
+      Abort;
+    end;    
+    try
+      Cliente:= TClienteControl.Create;
+      Cliente.ClienteModel.Acao         := ATipo;
+      TB_ClientesCODIGO.AsInteger       := Cliente.ClienteModel.GetId;
+      Cliente.ClienteModel.Codigo       := TB_ClientesCODIGO.AsInteger; //gera codigo automático
+      Cliente.ClienteModel.Nome         := TB_ClientesNOME.AsString;
+      Cliente.ClienteModel.Tipo         := TB_ClientesTIPO.AsString;
+      Cliente.ClienteModel.CPFCNPJ      := TB_ClientesCPFCNPJ.AsString;
+      Cliente.ClienteModel.RG           := TB_ClientesRG.AsString;
+      Cliente.ClienteModel.FLG_ATIVO    := TB_ClientesFLG_ATIVO.Value;
+      Cliente.ClienteModel.DataCadastro := FormatDateTime('yyyy/mm/dd',TB_ClientesDATACADASTRO.Value);
+      Cliente.Salvar;
+    finally
+      messagedlg('Dados gravados com sucesso!',mtinformation,[mbok],0);
+      Cliente.Free;
+      PreencheDataSetCliente;
+    end;
+  end
+  else
+  if TB_Clientes.State = dsEdit then
+  begin
+    ATipo := uEnumerado.tacAlterar;
+    try
+      Cliente:= TClienteControl.Create;
+      Cliente.ClienteModel.Acao         := ATipo;
+      Cliente.ClienteModel.Codigo       := TB_ClientesCODIGO.AsInteger;
+      Cliente.ClienteModel.Nome         := TB_ClientesNOME.AsString;
+      Cliente.ClienteModel.Tipo         := TB_ClientesTIPO.AsString;
+      Cliente.ClienteModel.CPFCNPJ      := TB_ClientesCPFCNPJ.AsString;
+      Cliente.ClienteModel.RG           := TB_ClientesRG.AsString;
+      Cliente.ClienteModel.FLG_ATIVO    := TB_ClientesFLG_ATIVO.Value;
+      Cliente.ClienteModel.DataCadastro := FormatDateTime('yyyy/mm/dd',TB_ClientesDATACADASTRO.Value);
+      Cliente.Salvar;
+    finally
+      messagedlg('Dados gravados com sucesso!',mtinformation,[mbok],0);
+      Cliente.Free;
+      PreencheDataSetCliente;
+    end;
+  end;
+end;
+
+procedure TfrmCad_Clientes.TB_EnderecoCLIAfterEdit(DataSet: TDataSet);
+begin
+  TB_EnderecoCLIID_CODCLIENTE.AsInteger := TB_ClientesCODIGO.AsInteger;
+  TB_EnderecoCLIENDERECO.FocusControl;
+end;
+
+procedure TfrmCad_Clientes.TB_EnderecoCLIAfterInsert(DataSet: TDataSet);
+begin
+  TB_EnderecoCLIID_CODCLIENTE.AsInteger := TB_ClientesCODIGO.AsInteger;
+  MSK_Cep.SetFocus;
+end;
+
+procedure TfrmCad_Clientes.TB_EnderecoCLIBeforeDelete(DataSet: TDataSet);
+begin
+  ATipo := uEnumerado.tacExcluir;
+  if MessageDlg('Deseja realmente exluir essa informação ?',mtConfirmation, [mbYes,mbNo],1) = mrYes then
+  begin
+    try
+      ClienteEndereco:= TClienteEnderecoControl.Create;
+      ClienteEndereco.ClienteEnderecoModel.Acao := ATipo;
+      ClienteEndereco.ClienteEnderecoModel.ID   := TB_EnderecoCLIID.AsInteger;
+      ClienteEndereco.Salvar;
+    finally
+      messagedlg('Dado Excluido com sucesso!',mtinformation,[mbok],0);
+      ClienteEndereco.Free;
+      PreencheDataSetClienteEndereco(TB_ClientesCODIGO.AsInteger);
+    end;
+  end;
+end;
+
+procedure TfrmCad_Clientes.TB_EnderecoCLIBeforePost(DataSet: TDataSet);
+begin
+  if TB_EnderecoCLI.State = dsInsert then  //grava no banco as inserções ou alterações
+  begin
+    ATipo := uEnumerado.tacIncluir;
+    try
+      ClienteEndereco:= TClienteEnderecoControl.Create;
+      ClienteEndereco.ClienteEnderecoModel.Acao            := ATipo;
+      TB_EnderecoCLIID.AsInteger                           := ClienteEndereco.ClienteEnderecoModel.GetId;
+      ClienteEndereco.ClienteEnderecoModel.ID              := TB_EnderecoCLIID.AsInteger; //gera codigo automático
+      ClienteEndereco.ClienteEnderecoModel.IDCodCliente    := TB_ClientesCODIGO.AsInteger;
+      ClienteEndereco.ClienteEnderecoModel.ENDERECO        := TB_EnderecoCLIENDERECO.AsString;
+      ClienteEndereco.ClienteEnderecoModel.NUMERO          := TB_EnderecoCLINUMERO.AsString;
+      ClienteEndereco.ClienteEnderecoModel.CEP             := TB_EnderecoCLICEP.AsString;
+      ClienteEndereco.ClienteEnderecoModel.BAIRRO          := TB_EnderecoCLIBAIRRO.AsString;
+      ClienteEndereco.ClienteEnderecoModel.CIDADE          := TB_EnderecoCLICIDADE.AsString;
+      ClienteEndereco.ClienteEnderecoModel.ESTADO          := TB_EnderecoCLIESTADO.AsString;
+      ClienteEndereco.ClienteEnderecoModel.PAIS            := TB_EnderecoCLIPAIS.AsString;
+      ClienteEndereco.Salvar;
+    finally
+      messagedlg('Dados gravados com sucesso!',mtinformation,[mbok],0);
+      ClienteEndereco.Free;
+      TB_EnderecoCLI.Cancel;
+      PreencheDataSetClienteEndereco(TB_ClientesCODIGO.AsInteger);
+    end;
+  end
+  else
+  if TB_TelefoneCLI.State = dsEdit then
+  begin
+    ATipo := uEnumerado.tacAlterar;
+    try
+      ClienteEndereco:= TClienteEnderecoControl.Create;
+      ClienteEndereco.ClienteEnderecoModel.Acao            := ATipo;
+      ClienteEndereco.ClienteEnderecoModel.ID              := TB_EnderecoCLIID.AsInteger; //gera codigo automático
+      ClienteEndereco.ClienteEnderecoModel.IDCodCliente    := TB_ClientesCODIGO.AsInteger;
+      ClienteEndereco.ClienteEnderecoModel.ENDERECO        := TB_EnderecoCLIENDERECO.AsString;
+      ClienteEndereco.ClienteEnderecoModel.NUMERO          := TB_EnderecoCLINUMERO.AsString;
+      ClienteEndereco.ClienteEnderecoModel.CEP             := TB_EnderecoCLICEP.AsString;
+      ClienteEndereco.ClienteEnderecoModel.BAIRRO          := TB_EnderecoCLIBAIRRO.AsString;
+      ClienteEndereco.ClienteEnderecoModel.CIDADE          := TB_EnderecoCLICIDADE.AsString;
+      ClienteEndereco.ClienteEnderecoModel.ESTADO          := TB_EnderecoCLIESTADO.AsString;
+      ClienteEndereco.ClienteEnderecoModel.PAIS            := TB_EnderecoCLIPAIS.AsString;
+      ClienteEndereco.Salvar;
+    finally
+      messagedlg('Dados gravados com sucesso!',mtinformation,[mbok],0);
+      ClienteEndereco.Free;
+      TB_EnderecoCLI.Cancel;
+      PreencheDataSetClienteEndereco(TB_ClientesCODIGO.AsInteger);
+    end;
+  end;
+end;
+
+procedure TfrmCad_Clientes.TB_TelefoneCLIAfterEdit(DataSet: TDataSet);
+begin
+  TB_TelefoneCLIID_CODCLIENTE.AsInteger := TB_ClientesCODIGO.AsInteger;
+  TB_TelefoneCLITELEFONE_CLIENTE.FocusControl;
+end;
+
+procedure TfrmCad_Clientes.TB_TelefoneCLIAfterInsert(DataSet: TDataSet);
+begin
+  TB_TelefoneCLIID_CODCLIENTE.AsInteger := TB_ClientesCODIGO.AsInteger;
+  TB_TelefoneCLITELEFONE_CLIENTE.FocusControl;
+end;
+
+procedure TfrmCad_Clientes.TB_TelefoneCLIBeforeDelete(DataSet: TDataSet);
+begin
+  ATipo := uEnumerado.tacExcluir;
+  if MessageDlg('Deseja realmente exluir essa informação ?',mtConfirmation, [mbYes,mbNo],1) = mrYes then
+  begin
+    try
+      ClienteTelefone:= TClienteTelefoneControl.Create;
+      ClienteTelefone.ClienteTelefoneModel.Acao := ATipo;
+      ClienteTelefone.ClienteTelefoneModel.ID   := TB_TelefoneCLIID.AsInteger;
+      ClienteTelefone.Salvar;
+    finally
+      messagedlg('Dado Excluido com sucesso!',mtinformation,[mbok],0);
+      ClienteTelefone.Free;
+      PreencheDataSetClienteTelefone(TB_ClientesCODIGO.AsInteger);
+    end;
+  end;
+end;
+
+procedure TfrmCad_Clientes.TB_TelefoneCLIBeforePost(DataSet: TDataSet);
+begin
+  if TB_TelefoneCLI.State = dsInsert then  //grava no banco as inserções ou alterações
+  begin
+    ATipo := uEnumerado.tacIncluir;  
+    try
+      ClienteTelefone:= TClienteTelefoneControl.Create;
+      ClienteTelefone.ClienteTelefoneModel.Acao            := ATipo;
+      TB_TelefoneCLIID.AsInteger                           := ClienteTelefone.ClienteTelefoneModel.GetId;
+      ClienteTelefone.ClienteTelefoneModel.ID              := TB_TelefoneCLIID.AsInteger; //gera codigo automático
+      ClienteTelefone.ClienteTelefoneModel.IDCodCliente    := TB_ClientesCODIGO.AsInteger; 
+      ClienteTelefone.ClienteTelefoneModel.TelefoneCliente := TB_TelefoneCLITELEFONE_CLIENTE.AsString;
+      ClienteTelefone.Salvar;
+    finally
+      messagedlg('Dados gravados com sucesso!',mtinformation,[mbok],0);
+      ClienteTelefone.Free;
+      TB_TelefoneCLI.Cancel;
+      PreencheDataSetClienteTelefone(TB_ClientesCODIGO.AsInteger);
+    end;
+  end
+  else
+  if TB_TelefoneCLI.State = dsEdit then
+  begin
+    ATipo := uEnumerado.tacAlterar;
+    try
+      ClienteTelefone:= TClienteTelefoneControl.Create;
+      ClienteTelefone.ClienteTelefoneModel.Acao            := ATipo;
+      TB_TelefoneCLIID.AsInteger                           := ClienteTelefone.ClienteTelefoneModel.GetId;
+      ClienteTelefone.ClienteTelefoneModel.ID              := TB_TelefoneCLIID.AsInteger; //gera codigo automático
+      ClienteTelefone.ClienteTelefoneModel.IDCodCliente    := TB_ClientesCODIGO.AsInteger; 
+      ClienteTelefone.ClienteTelefoneModel.TelefoneCliente := TB_TelefoneCLITELEFONE_CLIENTE.AsString;
+      ClienteTelefone.Salvar;
+    finally
+      messagedlg('Dados gravados com sucesso!',mtinformation,[mbok],0);
+      ClienteTelefone.Free;
+      TB_TelefoneCLI.Cancel;
+      PreencheDataSetClienteTelefone(TB_ClientesCODIGO.AsInteger);
+    end;
+  end;
+end;
+
+end.

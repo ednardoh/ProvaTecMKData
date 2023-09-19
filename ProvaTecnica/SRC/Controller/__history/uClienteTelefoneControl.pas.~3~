@@ -1,0 +1,19 @@
+unit uClienteTelefoneControl;
+
+interface
+
+uses
+  uClienteTelefoneModel, System.SysUtils, FireDAC.Comp.Client;
+
+type
+  TClienteTelefoneControl = class
+    private
+
+    public
+
+
+  end;
+
+implementation
+
+end.

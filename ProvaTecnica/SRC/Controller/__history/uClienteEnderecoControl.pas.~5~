@@ -1,0 +1,27 @@
+unit uClienteEnderecoControl;
+
+interface
+
+uses
+  uClienteEnderecoModel, System.SysUtils, FireDAC.Comp.Client;
+
+type
+  TClienteEnderecoControl = class
+    private
+      FClienteEnderecoModel: TClienteEnderecoModel;
+    public
+      constructor Create;
+      destructor Destroy; override;
+
+      function Salvar: Boolean;
+      function Obter(AorderBy: Integer;AValorparcial: string): TFDQuery;
+      function ObterEnderecoCLI(AValorpesquisa: string): TFDQuery;
+      function GetId: Integer;
+
+      property ClienteModel: TClienteEnderecoModel read FClienteEnderecoModel write FClienteEnderecoModel;
+
+  end;
+
+implementation
+
+end.

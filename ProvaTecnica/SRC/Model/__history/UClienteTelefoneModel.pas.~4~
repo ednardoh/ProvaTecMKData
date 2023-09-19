@@ -1,0 +1,10 @@
+unit uClienteTelefoneModel;
+
+interface
+
+uses
+  uEnumerado, FireDAC.Comp.Client;
+
+implementation
+
+end.

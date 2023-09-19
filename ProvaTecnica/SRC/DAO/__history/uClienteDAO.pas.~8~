@@ -1,0 +1,187 @@
+unit uClienteDAO;
+
+interface
+
+uses
+  FireDAC.Comp.Client, uConexaoDAO, uClienteModel, System.SysUtils, uSistemaControl;
+
+type
+  TClienteDao = class
+  private
+    FConexao: TConexao;
+  public
+    constructor Create;
+
+    function Incluir(AClienteModel: TClienteModel): Boolean;
+    function Alterar(AClienteModel: TClienteModel): Boolean;
+    function Excluir(AClienteModel: TClienteModel): Boolean;
+    function GetId: Integer;
+    function Obter(AorderBy: Integer;AValorparcial: string): TFDQuery;
+    function ObterCLIByID(AValorpesquisa: string): TFDQuery;
+  end;
+
+implementation
+
+{ TClienteDao }
+
+constructor TClienteDao.Create;
+begin
+  FConexao := TSistemaControl.GetInstance().Conexao;
+end;
+
+function TClienteDao.GetId: Integer;
+var
+  VQry: TFDQuery;
+begin
+  VQry := FConexao.CriarQuery();
+  try
+    VQry.Open('SELECT coalesce(MAX(CODIGO),0)+1 AS CODIGO FROM CLIENTES');
+    try
+      Result := VQry.Fields[0].AsInteger;
+    finally
+      VQry.Close;
+    end;
+  finally
+    VQry.Free;
+  end;
+end;
+
+function TClienteDao.Incluir(AClienteModel: TClienteModel): Boolean;
+var
+  VQry: TFDQuery;
+begin
+  VQry := FConexao.CriarQuery();
+  try
+    try
+      VQry.Connection.StartTransaction;  //Inicia uma trasação
+      VQry.ExecSQL('INSERT INTO CLIENTES (codigo,         '+
+                   '                      nome,           '+
+                   '                      Tipo,           '+
+                   '                      CPFCNPJ,        '+
+                   '                      RG,             '+
+                   '                      DataCadastro,   '+
+                   '                      FLG_ATIVO       '+
+                   '                      ) values (      '+
+                   '                      :codigo,        '+
+                   '                      :nome,          '+
+                   '                      :Tipo,          '+
+                   '                      :CPFCNPJ,       '+
+                   '                      :RG,            '+
+                   '                      :DataCadastro,  '+
+                   '                      :FLG_ATIVO      ',
+                   [AClienteModel.Codigo,
+                    AClienteModel.Nome,
+                    AClienteModel.Tipo,
+                    AClienteModel.CPFCNPJ,
+                    AClienteModel.RG,
+                    AClienteModel.DataCadastro,
+                    AClienteModel.FLG_ATIVO]);
+
+      VQry.Connection.Commit;
+      Result := True;
+      except
+      on E: Exception do
+        begin
+          VQry.Connection.Rollback;  //desfaz a transação caso ocorra erro.
+        end;
+    end;
+  finally
+    VQry.Free;
+  end;
+end;
+
+function TClienteDao.Excluir(AClienteModel: TClienteModel): Boolean;
+var
+  VQry: TFDQuery;
+begin
+  VQry := FConexao.CriarQuery();
+  try
+    try
+      VQry.Connection.StartTransaction;
+      VQry.ExecSQL(' DELETE FROM CLIENTES WHERE codigo =:codigo ', [AClienteModel.Codigo]);
+
+      VQry.Connection.Commit;
+      Result := True;
+      except
+      on E: Exception do
+        begin
+          VQry.Connection.Rollback;  //desfaz a transação
+        end;
+    end;
+  finally
+    VQry.Free;
+  end;
+end;
+
+function TClienteDao.Alterar(AClienteModel: TClienteModel): Boolean;
+var
+  VQry: TFDQuery;
+  strSQL: string;
+begin
+  VQry := FConexao.CriarQuery();
+  try
+    try
+      strSQL :='';
+      VQry.Connection.StartTransaction;
+      VQry.Close;
+      VQry.SQL.Clear;
+
+      strSQL := ' UPDATE CLIENTES SET nome=:nome,                 '+
+                '                     Tipo=:Tipo,                 '+
+                '                     CPFCNPJ=:CPFCNPJ,           '+
+                '                     RG=:RG,                     '+
+                '                     DataCadastro=:DataCadastro, '+
+                '                     FLG_ATIVO:=FLG_ATIVO        '+
+                ' where Codigo=:Codigo                            ';
+
+      VQry.SQL.Add(strSQL);
+      VQry.ParamByName('nome').AsString         := AClienteModel.Nome;
+      VQry.ParamByName('Tipo').AsString         := AClienteModel.Tipo;
+      VQry.ParamByName('CPFCNPJ').AsString      := AClienteModel.CPFCNPJ;
+      VQry.ParamByName('RG').AsString           := AClienteModel.RG;
+      VQry.ParamByName('DataCadastro').AsString := AClienteModel.DataCadastro;
+      VQry.ParamByName('FLG_ATIVO').AsInteger   := AClienteModel.FLG_ATIVO;
+      VQry.ParamByName('Codigo').AsInteger      := AClienteModel.Codigo;
+
+      VQry.ExecSQL();
+      VQry.Connection.Commit;
+      except
+      on E: Exception do
+        begin
+          VQry.Connection.Rollback;  //desfaz a transação
+        end;
+      end;
+      Result := True;
+  finally
+    VQry.Free;
+  end;
+end;
+
+//AQUI EU POSSO ORDENAR PELO INDICE DOS CAMPOS E FILTRAR PELO VALOR PARCIAL,
+//É NECESSÁRIO COLOCAR AS PORCENTAGEM %% NO EDIT NA TELA DE CONSULTA
+function TClienteDao.Obter(AorderBy: Integer;AValorparcial: string): TFDQuery;
+var
+  VQry: TFDQuery;
+begin
+  VQry := FConexao.CriarQuery();
+
+  if AValorparcial = '' then
+    VQry.Open('select codigo, nome, Tipo, CPFCNPJ, RG, DataCadastro, FLG_ATIVO from CLIENTES order by '+AorderBy.ToString)
+  else
+     VQry.Open('select codigo, nome, Tipo, CPFCNPJ, RG, DataCadastro, FLG_ATIVO from CLIENTES where NOME like ' + quotedstr(AValorparcial) + ' order by '+AorderBy.ToString);
+
+  Result := VQry;
+end;
+
+function TClienteDao.ObterCLIByID(AValorpesquisa: string): TFDQuery;
+var
+  VQry: TFDQuery;
+begin
+  VQry := FConexao.CriarQuery();
+
+  VQry.Open('select codigo, nome, Tipo, CPFCNPJ, RG, DataCadastro, FLG_ATIVO from CLIENTES where codigo = '+AValorpesquisa);
+
+  Result := VQry;
+end;
+
+end.

@@ -1,0 +1,19 @@
+unit uClienteEnderecoControl;
+
+interface
+
+uses
+  uClienteEnderecoModel, System.SysUtils, FireDAC.Comp.Client;
+
+type
+  TClienteEnderecoControl = class
+    private
+      FClienteEnderecoModel: TClienteEnderecoModel;
+    public
+
+
+  end;
+
+implementation
+
+end.
